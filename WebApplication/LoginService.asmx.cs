@@ -7,6 +7,7 @@ using System.Web.Script.Services;
 using Newtonsoft.Json;
 using makelanlan;
 using ScueFun;
+using System.Data;
 namespace WebApplication
 {
     /// <summary>
@@ -49,18 +50,42 @@ namespace WebApplication
         public List<KfkfCode> KFKF(string userId,string searchName)
         {
             MLogin.GetExeUname();
-            ClientService_kfku f = new ClientService_kfku();
-            List<ClientService_kfku> list_f=  f.Select(" and NAME like '%" + searchName+"%' or CONTACTOR like '%"+searchName+"%' or  PHONE like '%"+searchName+"%' ",
-                " top 30 NAME,id");
             List<KfkfCode> ls = new List<KfkfCode>();
-            foreach (ClientService_kfku k in list_f)
+            string sql = "  select top 30 NAME,CONTACTOR,PHONE from ( " +
+                "   select NAME,CONTACTOR,PHONE from  kfku where id in (select max(id) from kfku group by name)  " +
+                "   union all " +
+                "   select NAME,CONTACTOR,PHONE from  ClientService_kfku where id in (select max(id) from ClientService_kfku group by name)   " +
+                ")  as a  " +
+                "  group by  NAME,CONTACTOR,PHONE  " +
+                " HAVING NAME like '%" + searchName + "%' or CONTACTOR like '%" + searchName + "%' or  PHONE like '%" + searchName + "%' ";
+            DataTable table = (DataTable)BLL.SqltoView(BLL.数据库.默认数据库, BLL.数据类型.Table, sql);
+            foreach (DataRow r in  table.Rows)
             {
                 KfkfCode C = new KfkfCode();
-                C.ID = k.ID;
-                C.NAME = k.NAME;
+                C.NAME = r["NAME"].ToString();
                 ls.Add(C);
             }
             return ls;
+            //ClientService_kfku f = new ClientService_kfku();
+            //List<ClientService_kfku> list_f=  f.Select(" and NAME like '%" + searchName+"%' or CONTACTOR like '%"+searchName+"%' or  PHONE like '%"+searchName+"%' ",
+            //    " top 30 NAME,id");
+            //foreach (ClientService_kfku k in list_f)
+            //{
+            //    KfkfCode C = new KfkfCode();
+            //    C.ID = k.ID;
+            //    C.NAME = k.NAME;
+            //    ls.Add(C);
+            //}
+            //kfku m = new kfku();
+            //List<kfku> list_m = m.Select(" and NAME like '%" + searchName + "%' or CONTACTOR like '%" + searchName + "%' or  PHONE like '%" + searchName + "%' ",
+            //    " top 30 NAME,id");
+            //foreach (kfku mk in list_m)
+            //{
+            //    KfkfCode C = new KfkfCode();
+            //    C.ID = mk.ID;
+            //    C.NAME = mk.NAME;
+            //    ls.Add(C);
+            //}
             //string sql = "select NAME,CONTACTOR,PHONE from ClientService_kfku where 1=1  and name like '%" + searchName + "%' or CONTACTOR like '%" + searchName + "%' or  PHONE like '%" + searchName + "%' ";
 
         }

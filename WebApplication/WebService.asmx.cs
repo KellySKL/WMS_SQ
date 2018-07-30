@@ -23,29 +23,30 @@ namespace WebApplication
             return "Hello World";
         }
         [WebMethod]
-        public void PushPoi(int id, string position)
+        public void PushPoi(string name, string position)//修改为name  20180728 skl
         {
             ClientService_kfku k = new ClientService_kfku();
             k.ZF29 = position;
-            k.Updata(" and id=" + id);
+            k.Updata(" and name='" + name+"' ");
+            kfku p = new kfku();
+            p.ZF29 = position;
+            p.Updata(" and name='" + name + "' ");
         }
         [WebMethod]
-        public FindLoc GetPep(int id, string type)
+        public FindLoc GetPep(string name, string type)//修改为name   20180728 skl
         {
             MLogin.GetExeUname();
-            FindLoc findLoc = new FindLoc();
-            findLoc.status = 0;//标记状态 0：未获取到客户位置   -5:没有该客户  10：获取到客户位置
-            List<PersonLOC> locs = new List<PersonLOC>();
-            ClientService_kfku k = new ClientService_kfku();
-            List<ClientService_kfku> ts = k.Select(" and id=" + id);
-            string position;
+            string position = "";
             string lng;//经度
             string lat;//纬度
             string datetime = SysTime.GetTime.ToString("yyyyMMdd");
-            if (ts.Count > 0 && ts[0].ZF29 != null)
+            FindLoc findLoc = new FindLoc();
+            findLoc.status = 0;//标记状态 0：未获取到客户位置  10：获取到客户位置
+            List<PersonLOC> locs = new List<PersonLOC>();
+            if (KFLocation.Get(name)!="")
             {
                 findLoc.status = 10;
-                position = ts[0].ZF29;
+                position = KFLocation.Get(name);
                 string[] strs_kf = position.Split(',');
                 lng = strs_kf[0];
                 lat = strs_kf[1];
@@ -69,12 +70,7 @@ namespace WebApplication
                 findLoc.kflng = Convert.ToDouble(lng);
                 findLoc.kflat = Convert.ToDouble(lat);
                 findLoc.list = locs;
-
             }
-            //else
-            //{
-            //    findLoc.status = -5;
-            //}
             return findLoc;
             //if (type.Trim() == "YW")
             //{

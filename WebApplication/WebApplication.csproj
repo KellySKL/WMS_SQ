@@ -108,6 +108,7 @@
       <DependentUpon>GetService.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="KFLocation.cs" />
     <Compile Include="LocationService.asmx.cs">
       <DependentUpon>LocationService.asmx</DependentUpon>
       <SubType>Component</SubType>
@@ -116,7 +117,9 @@
       <DependentUpon>LoginService.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MyGlobal.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UserLocation.cs" />
     <Compile Include="WebService.asmx.cs">
       <DependentUpon>WebService.asmx</DependentUpon>
       <SubType>Component</SubType>

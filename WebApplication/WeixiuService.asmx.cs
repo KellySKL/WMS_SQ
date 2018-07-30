@@ -16,14 +16,42 @@ namespace WebApplication
     [System.Web.Script.Services.ScriptService]
     public class WeixiuService : System.Web.Services.WebService
     {
-
         [WebMethod]
         public string HelloWorld()
         {
             return "Hello World";
         }
+        /// <summary>
+        /// 售后维修
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
         [WebMethod]
-        public List<WXOBJ1> WxMsg(string userName)
+        public List<WXOBJ1> AfterSRepair(string userName)
+        {
+            MLogin.GetExeUname();
+            List<WXOBJ1> ms = new List<WXOBJ1>();
+            clientservice_AfterServiceBill bill = new clientservice_AfterServiceBill();
+            List<clientservice_AfterServiceBill> list = bill.Select(" and  BILLMAN='" + userName + "'   and  sz10=0 ");
+            foreach (clientservice_AfterServiceBill c in list)
+            {
+                WXOBJ1 o = new WXOBJ1();
+                o.CODE = c.CODE;//维修单号
+                o.BILLMAN = c.BILLMAN;
+                o.CLIENT = c.CLIENT;
+                o.BILLTYPE = c.BILLTYPE;
+                o.ZF1 = c.ZF1;//设备编号
+                ms.Add(o);
+            }
+            return ms;
+        }
+        /// <summary>
+        /// 内部维修
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        [WebMethod]
+        public List<WXOBJ1> NeibuWx(string userName)
         {
             MLogin.GetExeUname();
             List<WXOBJ1> ms = new List<WXOBJ1>();
@@ -47,7 +75,6 @@ namespace WebApplication
                 o.ZF1 = c.ZF1;
                 ms.Add(o);
             }
-
             return ms;
         }
         /// <summary>
@@ -57,6 +84,9 @@ namespace WebApplication
         {
             private string _CLIENT;
             public string CLIENT { get { return _CLIENT; } set { _CLIENT = value; } }
+
+            private string _CODE;
+            public string CODE { get { return _CODE; } set { _CODE = value; } }
 
             private string _ZF1;
             public string ZF1 { get { return _ZF1; } set { _ZF1 = value; } }

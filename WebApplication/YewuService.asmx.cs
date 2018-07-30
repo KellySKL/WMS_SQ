@@ -16,23 +16,61 @@ namespace WebApplication
     [System.Web.Script.Services.ScriptService]
     public class YewuService : System.Web.Services.WebService
     {
-
         [WebMethod]
         public string HelloWorld()
         {
             return "Hello World";
         }
         [WebMethod]
-        public Boolean NewVisit(int client_id, string client,string zf2, string billtype,string date, string hisname,
-            string hisposition,string hisphone,string content,string userName)
+        //int client_id, 
+        public int NewVisit(string client,string zf2, string billtype,string date, string hisname,
+            string hisposition,string hisphone,string content,string userName,string userId)
         {
             MLogin.GetExeUname();
-            clientservice_VisitBill bill = new clientservice_VisitBill();
-            ClientService_kfku k = new ClientService_kfku();
-            List<ClientService_kfku> ks = k.Select(" and ID=" + client_id, " TRADETYPENAME  ");
-            if (ks.Count > 0)
+            int flag = 0;//默认为0
+            string position = KFLocation.Get(client);
+            double lng, lat;
+            if (position == "")
             {
-                bill.ZF1 = ks[0].TRADETYPENAME;
+                flag = -1;
+                return flag;//该客户没有定位
+            }
+            string[] strs_kf = position.Split(',');
+            lng = Convert.ToDouble(strs_kf[0]);
+            lat = Convert.ToDouble(strs_kf[1]);
+
+            string userpoi = UserLocation.Get(userId);
+            double lng1, lat1;
+            if (userpoi == "")
+            {
+                flag = -2;
+                return flag;//用户无定位信息
+            }
+            string[] poi = userpoi.Split(':');
+            lng1 = Convert.ToDouble(poi[0]);
+            lat1 = Convert.ToDouble(poi[1]);
+
+            if (ScueFun.LngLatDis.GetDistance(lng, lat, lng1, lat1) > MyGlobal.VisitAera)
+            {
+                flag = 5;
+                return flag;//超出范围不能提交
+            }
+
+            clientservice_VisitBill bill = new clientservice_VisitBill();
+            kfku m = new kfku();
+            List<kfku> ms = m.Select(" and NAME='" + client + "'  order by id desc  ");
+            if (ms.Count > 0)
+            {
+                bill.ZF1 = ms[0].TRADETYPENAME;
+            }
+            else
+            {
+                ClientService_kfku k = new ClientService_kfku();
+                List<ClientService_kfku> ks = k.Select(" and NAME='" + client + "'   order by id desc   ");
+                if (ks.Count > 0)
+                {
+                    bill.ZF1 = ks[0].TRADETYPENAME;
+                } 
             }
             bill.CODE = ScueFun.Code.BasicCode();
             bill.CLIENT = client;
@@ -48,7 +86,7 @@ namespace WebApplication
             bill.ZF5 = hisphone;
             bill.INTRODUCER = userName;
             bill.Insert();
-            return true;
+            return flag;
         }
         [WebMethod]
         public List<VisitBill> HisVisit(string userName)
