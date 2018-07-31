@@ -17,12 +17,12 @@ namespace WebApplication
         {
             string position = "";
             ClientService_kfku k = new ClientService_kfku();
-            List<ClientService_kfku> ts = k.Select(" and name='" + name + "' ");
+            List<ClientService_kfku> ts = k.Select(" and name='" + name.Trim() + "' ");
             kfku m = new kfku();
-            List<kfku> ms = m.Select(" and name='" + name + "' ");
+            List<kfku> ms = m.Select(" and name='" + name.Trim() + "' ");
             if (ts.Count > 0)
             {
-                if (ts[0].ZF29 != null || ts[0].ZF29.Trim() != "")
+                if (ts[0].ZF29 != null && ts[0].ZF29.Trim() != "")
                 {
                     position = ts[0].ZF29;
                 }
@@ -31,9 +31,9 @@ namespace WebApplication
             {
                 if (ms.Count > 0)
                 {
-                    if (ms[0].ZF29 != null || ms[0].ZF29.Trim() != "")
+                    if (ms[0].ZF29 != null && ms[0].ZF29.Trim() != "")
                     {
-                        position = ts[0].ZF29;
+                        position = ms[0].ZF29;
                     }
 
                 }   

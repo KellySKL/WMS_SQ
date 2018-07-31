@@ -23,6 +23,13 @@ namespace WebApplication
         }
         [WebMethod]
         //int client_id, 
+        public string GetKFLoc(string client)
+        {
+            MLogin.GetExeUname();
+            return KFLocation.Get(client);
+        }
+        [WebMethod]
+        //int client_id, 
         public int NewVisit(string client,string zf2, string billtype,string date, string hisname,
             string hisposition,string hisphone,string content,string userName,string userId)
         {
