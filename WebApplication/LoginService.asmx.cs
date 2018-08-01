@@ -98,8 +98,8 @@ namespace WebApplication
             MLogin.GetExeUname();
             User u = new User();
             u.status = -1;
-            u.userId = userId;
-            List<puku_user> mp = GetPUser.PUser(" and USERPU='" + userId + "' ");
+            u.userId = userId.Trim();
+            List<puku_user> mp = GetPUser.PUser(" and USERPU='" + userId.Trim() + "' ");
             if (mp.Count > 0)
             {
                 if (BitLock.RealseLock_L(mp[0].MM) == password)
