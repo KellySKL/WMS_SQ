@@ -24,7 +24,8 @@ namespace WebApplication
         [WebMethod]
         public string HelloWorld()
         {
-            return "Hello World";
+            return "hello world!";
+           // return "M:"+UserInfo.UName+"S:"+ MyGlobal.UserLogin.ToString();
         }
 
         [WebMethod]
@@ -59,6 +60,7 @@ namespace WebApplication
                 "  group by  NAME,CONTACTOR,PHONE  " +
                 " HAVING NAME like '%" + searchName + "%' or CONTACTOR like '%" + searchName + "%' or  PHONE like '%" + searchName + "%' ";
             DataTable table = (DataTable)BLL.SqltoView(BLL.数据库.默认数据库, BLL.数据类型.Table, sql);
+                        
             foreach (DataRow r in  table.Rows)
             {
                 KfkfCode C = new KfkfCode();
@@ -104,11 +106,13 @@ namespace WebApplication
             {
                 if (BitLock.RealseLock_L(mp[0].MM) == password)
                 {
-                    UserInfo.UName = mp[0].TURENAME;
+                    //UserInfo.UName = mp[0].TURENAME;
                     UserInfo.Uzw = "管理员";
+                    MyGlobal.UserLogin.Add(mp[0].TURENAME);
                     u.name = mp[0].TURENAME;
                     u.authorised = mp[0].DEPT;
                     u.status = 10;
+                    u.mname = UserInfo.UName;
                 }
                 else
                 {
@@ -123,10 +127,11 @@ namespace WebApplication
         }
 
         [WebMethod]
-        [ScriptMethod(UseHttpGet = true)]
-        public string WS3()
+       // [ScriptMethod(UseHttpGet = true)]
+        public string WS3(string name)
         {
-            return "GET无参数";
+          //  return JsonConvert.SerializeObject("cdshi");
+            return name;
         }
 
         [WebMethod]
@@ -221,6 +226,9 @@ namespace WebApplication
 
         private string _authorised;
         public string authorised { get { return _authorised; } set { _authorised = value; } }
-        
+
+        private string _mname;
+        public string mname { get { return _mname; } set { _mname = value; } }
+
     }
 }

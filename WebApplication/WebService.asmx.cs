@@ -17,10 +17,12 @@ namespace WebApplication
     [System.Web.Script.Services.ScriptService]
     public class WebService : System.Web.Services.WebService
     {
+        
+
         [WebMethod]
-        public string HelloWorld()
+        public string Hell()
         {
-            return "Hello World";
+            return UserInfo.UName;
         }
         [WebMethod]
         public void PushPoi(string name, string position)//修改为name  20180728 skl
@@ -53,6 +55,7 @@ namespace WebApplication
                 //只取当天人的最新记录
                 string sql = "select * from scue_user a where not exists(select 1 from scue_user b where b.userpu=a.userpu and b.id>a.id) and a.date ='" + datetime + "' ";
                 List<scue_user> scue_s = BLL.SqlToList<scue_user>(new BLL.数据库(), sql);
+                 
                 foreach (scue_user s in scue_s)
                 {
                     string[] strs = s.POINTS.Split(',');

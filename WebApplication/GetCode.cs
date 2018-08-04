@@ -5,6 +5,7 @@ using System.Web;
 using makelanlan;
 namespace WebApplication
 {
+
     public class GetCode
     {
         public static string SetCode(DateTime dateTime)

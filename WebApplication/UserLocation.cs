@@ -19,6 +19,7 @@ namespace WebApplication
             //只取当天人的最新记录
             string sql = "select * from scue_user a where not exists(select 1 from scue_user b where b.userpu=a.userpu and b.id>a.id) and a.date ='" + datetime + "'  and userpu='" + userId + "'  ";
             List<scue_user> scue_s = BLL.SqlToList<scue_user>(new BLL.数据库(), sql);
+            
             if (scue_s.Count>0)
             {
                 string[] strs = scue_s[0].POINTS.Split(',');
