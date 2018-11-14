@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+此文件由 Web 项目的发布/打包过程使用。可以通过编辑此 MSBuild 文件
+自定义此过程的行为。为了解与此相关的更多内容，请访问 https://go.microsoft.com/fwlink/?LinkID=208121。 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <_PublishTargetUrl>E:\WebService</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="BaseWebService.asmx">
+      <publishTime>08/07/2018 15:34:05</publishTime>
+    </File>
+    <File Include="bin/AppConfig.dll">
+      <publishTime>07/25/2018 08:36:10</publishTime>
+    </File>
+    <File Include="bin/AppConfig.pdb">
+      <publishTime>07/25/2018 08:36:10</publishTime>
+    </File>
+    <File Include="bin/makelanlanBLL.dll">
+      <publishTime>07/30/2018 13:46:23</publishTime>
+    </File>
+    <File Include="bin/MakelanlanFun.dll">
+      <publishTime>07/30/2018 13:46:24</publishTime>
+    </File>
+    <File Include="bin/makelanlanSKin.dll">
+      <publishTime>07/30/2018 13:46:11</publishTime>
+    </File>
+    <File Include="bin/Newtonsoft.Json.dll">
+      <publishTime>07/13/2018 08:54:08</publishTime>
+    </File>
+    <File Include="bin/ScueFun.dll">
+      <publishTime>07/30/2018 15:12:38</publishTime>
+    </File>
+    <File Include="bin/ScueFun.pdb">
+      <publishTime>07/30/2018 15:12:38</publishTime>
+    </File>
+    <File Include="bin/WebApplication.dll">
+      <publishTime>08/08/2018 16:13:21</publishTime>
+    </File>
+    <File Include="bin/WebApplication.pdb">
+      <publishTime>08/08/2018 16:13:21</publishTime>
+    </File>
+    <File Include="FormService.asmx">
+      <publishTime>07/19/2018 13:56:32</publishTime>
+    </File>
+    <File Include="GetService.asmx">
+      <publishTime>07/21/2018 14:55:31</publishTime>
+    </File>
+    <File Include="Identity.asmx">
+      <publishTime>08/04/2018 10:03:08</publishTime>
+    </File>
+    <File Include="LocationService.asmx">
+      <publishTime>07/13/2018 16:37:40</publishTime>
+    </File>
+    <File Include="LoginService.asmx">
+      <publishTime>07/12/2018 11:29:42</publishTime>
+    </File>
+    <File Include="LoginWebService.asmx">
+      <publishTime>07/12/2018 10:48:58</publishTime>
+    </File>
+    <File Include="PrecompiledApp.config">
+      <publishTime>08/08/2018 16:13:25</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>08/08/2018 16:13:25</publishTime>
+    </File>
+    <File Include="WebService.asmx">
+      <publishTime>07/27/2018 10:10:04</publishTime>
+    </File>
+    <File Include="WeixiuService.asmx">
+      <publishTime>07/26/2018 09:11:25</publishTime>
+    </File>
+    <File Include="YewuService.asmx">
+      <publishTime>07/23/2018 08:18:38</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

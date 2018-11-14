@@ -1,0 +1,651 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using makelanlan;
+using ScueFun;
+using System.Data;
+namespace WebApplication
+{
+    public class SignCS
+    {
+        /// <summary>
+        /// 返回 -1：没有该人员  -2:没有任何单子  -3:距离超长  -4:已签到  -5;已签到下班  0：成功
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="lng"></param>
+        /// <param name="lat"></param>
+        /// <returns></returns>
+        public static int SignOut(string userName,string userId,double lng,double lat)
+        {
+            puku_user user = new puku_user();
+            List<puku_user> pukus = user.Select(" and USERPU='" + userId + "'  and ISSTOP='否'  and left(ZF4, 10)= CONVERT(varchar(10), GETDATE(), 120)  ");
+            if (pukus.Count > 0)
+            {
+                //double lng_kf = pukus[0].ZF2 == null ? -1 : Convert.ToDouble(pukus[0].ZF2);
+                //double lat_kf = pukus[0].ZF3 == null ? -1 : Convert.ToDouble(pukus[0].ZF3);
+                //if (lng_kf == -1 || lat_kf == -1)
+                //{
+                //    return -2;//没有任何单子
+                //}
+                //else
+                //{
+                    string date = System.DateTime.Now.ToString("yyyy-MM-dd");
+                    if (MyGlobal.AERA_CHECK)//是否距离校验
+                    {
+                        if (LngLatDis.GetDistance(lng, lat, Convert.ToDouble(pukus[0].ZF2), Convert.ToDouble(pukus[0].ZF3)) > MyGlobal.VISITAERA)
+                        {
+                            return -3;//距离超长
+                        }
+                    }
+                    //else
+                    //{
+                    L_SIGN s = new L_SIGN();
+                    List<L_SIGN> l =  s.Select(" AND USERID='" + userId + "'  AND  DATE='"+ date + "'  ");
+                    if (l.Count <= 0)//今日无签到记录
+                    {
+                        L_SIGN mm = new L_SIGN();
+                        mm.USERID = userId;
+                        mm.TURENAME = pukus[0].TURENAME;
+                        mm.DATE = date;
+                        mm.TIME_D = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        mm.NAME_D = pukus[0].ZF1;
+                        mm.LAT_D = lat.ToString();//签到时 用户的位置
+                        mm.LNG_D = lng.ToString();
+                        mm.R_CODE_OUT = pukus[0].REFERCODE;//签到依据的单据
+                        mm.Insert();
+                        return 0;
+                    }
+                    else//今日记录已存在
+                    {
+                        string sign_out = l[0].TIME_D == null ? "" : l[0].TIME_D;
+                        if (sign_out.Trim() != "")//下班已签到
+                        {
+                            return -4;//已签到
+                        }
+                        else
+                        {
+                            L_SIGN mm = new L_SIGN();
+                            mm.TIME_D = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+                            mm.NAME_D = pukus[0].ZF1;
+                            mm.LAT_D = lat.ToString();
+                            mm.LNG_D = lng.ToString();
+                            mm.R_CODE_OUT = pukus[0].REFERCODE;
+                            mm.Updata(" and  id=" + l[0].ID);
+                            return 0;
+                        }
+                    } 
+                //}
+            }
+            else
+            {
+                return -2;//没有该人员
+            }
+        }
+        public static int SignIn(string userName,string userId, double lng, double lat)
+        {
+            TreatFee f = new TreatFee();
+            List<TreatFee> fee = f.Select(" and billman='" + userName + "' and VBCODE= '打卡申请'  and  left(createtime, 10) = CONVERT(varchar(10), GETDATE(), 120)  and state=10 order by id desc ");
+            if (fee.Count > 0)
+            {
+                double lng_kf = fee[0].KFLNG == null ? -1 : Convert.ToDouble(fee[0].KFLNG);
+                double lat_kf = fee[0].KFLAT == null ? -1 : Convert.ToDouble(fee[0].KFLAT);
+                DateTime now= System.DateTime.Now;
+
+                if (MyGlobal.AERA_CHECK)//是否距离校验
+                {
+                    if (LngLatDis.GetDistance(lng, lat, lng_kf, lat_kf) > MyGlobal.VISITAERA)
+                    {
+                        return -3;//距离超长
+                    }
+                }
+                //else
+                //{
+                L_SIGN s = new L_SIGN();
+                string date_s = now.ToString("yyyy-MM-dd");
+                List<L_SIGN> l = s.Select(" AND USERID='" + userId + "'  AND  DATE='" + date_s + "'  ");
+                if (l.Count <= 0)//今日无签到记录
+                {
+                    L_SIGN mm = new L_SIGN();
+                    mm.USERID = userId;
+                    mm.TURENAME = userName;
+                    mm.DATE = date_s;
+                    mm.TIME_A = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    mm.NAME_A = fee[0].CLIENT;
+                    mm.LAT_A = lat.ToString();
+                    mm.LNG_A = lng.ToString();
+                    mm.R_CODE_IN = fee[0].BILLCODE;
+                    mm.Insert();
+                    return 0;
+                }
+                else//今日记录已存在
+                {
+                    string sign_in = l[0].TIME_A == null ? "" : l[0].TIME_A;
+                    string sign_out = l[0].TIME_D == null ? "" : l[0].TIME_D;
+                    if (sign_in.Trim() != "")//上班已签到
+                    {
+                        return -4;//已签到
+                    }
+                    else if (sign_out!="")
+                    {
+                        return -5;//已签到下班
+                    }
+                    else
+                    {
+                        L_SIGN mm = new L_SIGN();
+                        mm.TIME_A = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        mm.NAME_A = fee[0].CLIENT;
+                        mm.LAT_A = lat.ToString();
+                        mm.LNG_A = lng.ToString();
+                        mm.R_CODE_IN = fee[0].BILLCODE;
+                        mm.Updata(" and  id=" + l[0].ID);
+                        return 0;
+                    }
+                }
+            }
+            else
+            {
+                return -2;//没有任何单子
+            }
+        }
+
+         /// <summary>
+         /// 查找当天签到记录
+         /// </summary>
+         /// <param name="userId">用户ID</param>
+         /// <param name="date_s">日期：yyyy-MM-dd</param>
+        /// <returns></returns>
+        public static List<string> SignRemark(string userId, string date_s)
+        {
+            L_SIGN s = new L_SIGN();
+           // string str_date = System.Text.RegularExpressions.Regex.Replace(date_s, "-", "");
+            List<string> result = new List<string>();
+            List<L_SIGN> l = s.Select(" AND USERID='" + userId + "'  AND  DATE='" + date_s + "'  ");
+            if (l.Count <= 0)//无签到记录
+            {
+                return null;
+            }
+            else
+            {
+                string sign_a = l[0].TIME_A == null ? "" : l[0].TIME_A;
+                string sign_b = l[0].TIME_B == null ? "" : l[0].TIME_B;
+                string sign_c = l[0].TIME_C == null ? "" : l[0].TIME_C;
+                string sign_d = l[0].TIME_D == null ? "" : l[0].TIME_D;
+                if (sign_a != "")
+                {
+                    result.Add(sign_a);
+                }
+                if (sign_b != "")
+                {
+                    result.Add(sign_b);
+                }
+                if (sign_c != "")
+                {
+                    result.Add(sign_c);
+                }
+                if (sign_d != "")
+                {
+                    result.Add(sign_d);
+                }
+                return result;
+            }
+        }
+        public static int Sign_P(string userName, string userId, double lng, double lat,string method)
+        {
+            List<KfkfCode> company = new List<KfkfCode>();
+            if (MyGlobal.AERA_CHECK)
+            {
+                company = NearBY(lng, lat, 2);
+                if (company.Count <= 0)
+                {
+                    return -1;//没有找到附近的打卡点
+                }
+            }
+            else
+            {
+                KfkfCode K = new KfkfCode();
+                K.ID = 0;
+                K.NAME = "测试公司";
+                company.Add(K);
+            }
+            L_SIGN s = new L_SIGN();
+            DateTime now = SysTime.GetTime;
+            DateTime time1 = Convert.ToDateTime(now.ToString("yyyy-MM-dd 08:00:00"));
+            DateTime time2 = Convert.ToDateTime(now.ToString("yyyy-MM-dd 12:45:00"));
+            DateTime time3 = Convert.ToDateTime(now.ToString("yyyy-MM-dd 13:00:00"));
+            DateTime time4 = Convert.ToDateTime(now.ToString("yyyy-MM-dd 17:00:00"));
+            string type = string.Empty;
+
+            if (now.Hour < 12)
+            {
+                type = "上午";
+            }
+            else if (now.Hour < 14)//12:00-13:59
+            {
+                type = "中午";
+            }
+            else
+            {
+                type = "下午";
+            }
+            int sign_status = 0;//1:A, 2:B, 3:C, 4:D   -1:已签到
+            string operate_type = "INSER";
+
+            string date_s = now.ToString("yyyy-MM-dd");
+            List<L_SIGN> l = s.Select(" AND USERID='" + userId + "'  AND  DATE='" + date_s + "'  ");
+
+            if (l.Count <= 0)//今日无签到记录,都算上班卡 a/c
+            {
+                if (type == "上午")
+                {
+                    if (method == "out")
+                    {
+                        sign_status = 2;//指明早退
+                    }
+                    else
+                    {
+                        sign_status = 1;//**
+                    }
+                }
+                else//12:00以后
+                {
+                    if (DateTime.Compare(now, time2) <= 0)//早上没打卡 现在打12：00下班卡  12:00-12:45
+                    {
+                        sign_status = 2;
+                    }
+                    else //8：00  12:00漏卡  下午来打卡
+                    {
+                        #region 现*逻辑
+                        if (DateTime.Compare(now, time3) <= 0)//8：00  12:00漏卡  12:45-13:00
+                        {
+                            sign_status = 3;
+                        }
+                        else //13:00 以后
+                        {
+                            if (DateTime.Compare(now, time4) <= 0)
+                            {
+                                if (method == "out")
+                                {
+                                    sign_status = 4;
+                                }
+                                else
+                                {
+                                    sign_status = 3;//*****
+                                }
+                            }
+                            else
+                            {
+                                sign_status = 4;
+                            }
+                            #region 原* 逻辑
+                            //if (DateTime.Compare(now, time4) <= 0)//8：00  12:00漏卡  12:45-13:00
+                            //{
+                            //    sign_status = 3;
+                            //}
+                            //else //下班卡
+                            //{
+                            //    sign_status = 4;//下午签退
+                            //}
+                            #endregion
+
+                        }
+                        #endregion
+                    }
+                }
+            }
+            else //今日记录已存在 有上班
+            {
+                operate_type = "UPDATE";
+                string sign_a = l[0].TIME_A == null ? "" : l[0].TIME_A;
+                string sign_b = l[0].TIME_B == null ? "" : l[0].TIME_B;
+                string sign_c = l[0].TIME_C == null ? "" : l[0].TIME_C;
+                string sign_d = l[0].TIME_D == null ? "" : l[0].TIME_D;
+                if (type == "上午")
+                {
+                    if (sign_b == "")// 下班卡无  A一定有
+                    {
+                        TimeSpan t = now - Convert.ToDateTime(sign_a);
+                        if (t.TotalMinutes <= MyGlobal.SignMin)//确认A卡是否已打
+                        {
+                            sign_status = -1;//已签到
+                        }
+                        else
+                        {
+                            if (method == "in")
+                            {
+                                sign_status = -1;
+                            }
+                            else
+                            {
+                                sign_status = 2; //早退 ******
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sign_status = -1;// b有了，早退， 早上就不能签到了
+                    }
+                }
+                else//12点以后
+                {
+                    //是否打B卡
+                    if (DateTime.Compare(now, time2) <= 0)//12:00 - 12:45
+                    {
+                        if (sign_b == "")
+                        {
+                            sign_status = 2;//正常签退
+                        }
+                        else
+                        {
+                            sign_status = -1;// 已签退，确认B卡是否已打
+                        }
+                    }
+                    //是否打C卡
+                    else
+                    {
+                        if (DateTime.Compare(now, time3) <= 0) //12:45 - 13:00
+                        {
+                            if (sign_c == "")
+                            {
+                                sign_status = 3;//打卡
+                            }
+                            else
+                            {
+                                sign_status = -1;//已打卡，确认正常C卡是否已打
+                            }
+                        }
+                        else// 13:00 以后
+                        {
+                            if (sign_c == "" && DateTime.Compare(now, time4) < 0) //C卡没有 且时间是在5点以前
+                            {
+                                if (method == "out")//除非指明是签退，早退
+                                {
+                                    //D卡早退 是否可以打D卡
+                                    if (sign_d == "")
+                                    {
+                                        sign_status = 4;
+                                    }
+                                    else
+                                    {
+                                        sign_status = -1; //确认早退D卡是否已打
+                                    }
+                                }
+                                else
+                                {
+                                    sign_status = 3;//迟到 ********
+                                }
+                            }
+                            else//C卡有 || 时间到了D卡
+                            {
+                                TimeSpan span = now - Convert.ToDateTime(sign_c);
+                                if (span.TotalMinutes <= MyGlobal.SignMin)
+                                {
+                                    sign_status = -1;//确认C卡是否已打
+                                }
+                                else
+                                {
+                                    if (method == "in")
+                                    {
+                                        sign_status = -1;
+                                    }
+                                    else
+                                    {
+                                        //***********************
+                                        if (sign_d == "")
+                                        {
+                                            sign_status = 4;
+                                        }
+                                        else
+                                        {
+                                            sign_status = -1;//确认正常D卡已打
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #region 原来逻辑
+                    //============================================================
+                    //if (sign_b == "")//没有早退 正常
+                    //{
+                    //    if (DateTime.Compare(now, time2) <= 0)//准时下班 //12：00 - 12：45以前
+                    //    {
+                    //        sign_status = 2;
+                    //    }
+                    //    else//12:00漏卡
+                    //    {
+                    //        #region
+                    //        if (DateTime.Compare(now, time3) <= 0) //准时上班
+                    //        {
+                    //            if (sign_c == "")
+                    //            {
+                    //                sign_status = 3;//打卡
+                    //            }
+                    //            else
+                    //            {
+                    //                sign_status = -1;//已打卡
+                    //            }
+                    //        }
+                    //        else//1点以后 13:00 上班迟到
+                    //        {
+                    //            if (sign_c == "")// 13:00 上班迟到 或 漏卡
+                    //            {
+                    //                if (DateTime.Compare(now, time4) <= 0)// 5：00 之前打上班
+                    //                {
+                    //                    sign_status = 3;
+                    //                }
+                    //                else//13：00 漏卡
+                    //                {
+                    //                    if (sign_d == "")
+                    //                    {
+                    //                        sign_status = 4;
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        sign_status = -1;
+                    //                    }
+                    //                }
+                    //            }
+                    //            else//c 卡已打
+                    //            {
+                    //                TimeSpan t = now - Convert.ToDateTime(sign_c);
+                    //                if (t.TotalMinutes <= 5)//5分钟内不能重复打卡
+                    //                {
+                    //                    sign_status = -1;
+                    //                }
+                    //                else
+                    //                {
+                    //                    if (sign_d == "")
+                    //                    {
+                    //                        sign_status = 4;
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        sign_status = -1;
+                    //                    }
+                    //                }
+                    //            }
+                    //        }
+                    //        #endregion
+                    //    }
+                    //}
+
+                    //else//12：00 早退了 
+                    //{
+                    //    TimeSpan t = now -Convert.ToDateTime(sign_b) ;
+                    //    if (t.TotalMinutes <= 5)//5分钟内不能重复打卡
+                    //    {
+                    //        sign_status = -1;
+                    //    }
+                    //    else
+                    //    {
+                    //        if (DateTime.Compare(now, time2) <= 0)//12：00 - 12：45以前
+                    //        {
+                    //            sign_status = -1;
+                    //        }
+                    //        else
+                    //        {
+                    //            #region
+                    //            if (DateTime.Compare(now, time3) <= 0) //准时上班
+                    //            {
+                    //                if (sign_c == "")
+                    //                {
+                    //                    sign_status = 3;//打卡
+                    //                }
+                    //                else
+                    //                {
+                    //                    sign_status = -1;//已打卡
+                    //                }
+                    //            }
+                    //            else//1点以后 13:00 上班迟到
+                    //            {
+                    //                if (sign_c == "")// 13:00 上班迟到 或 漏卡
+                    //                {
+                    //                    if (DateTime.Compare(now, time4) <= 0)// 5：00 之前打上班
+                    //                    {
+                    //                        sign_status = 3;
+                    //                    }
+                    //                    else//13：00 漏卡
+                    //                    {
+                    //                        if (sign_d == "")
+                    //                        {
+                    //                            sign_status = 4;
+                    //                        }
+                    //                        else
+                    //                        {
+                    //                            sign_status = -1;
+                    //                        }
+                    //                    }
+                    //                }
+                    //                else//c 卡已打
+                    //                {
+                    //                    TimeSpan t1 = now - Convert.ToDateTime(sign_c);
+                    //                    if (t1.TotalMinutes <= 5)//5分钟内不能重复打卡
+                    //                    {
+                    //                        sign_status = -1;
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        if (sign_d == "")
+                    //                        {
+                    //                            sign_status = 4;
+                    //                        }
+                    //                        else
+                    //                        {
+                    //                            sign_status = -1;
+                    //                        }
+                    //                    }
+                    //                }
+                    //            }
+                    //            #endregion
+                    //        }
+                    //    }
+                    //}
+
+                    #endregion
+                }
+            }
+
+            if (sign_status > 0)
+            {
+                L_SIGN mm = new L_SIGN();
+                mm.USERID = userId;
+                mm.TURENAME = userName;
+                mm.DATE = date_s;
+                if (sign_status == 1)
+                {
+                    mm.TIME_A = now.ToString("yyyy-MM-dd HH:mm:ss");
+                    mm.NAME_A = company[0].NAME;
+                    mm.LAT_A = lat.ToString();
+                    mm.LNG_A = lng.ToString();
+                }
+                else if (sign_status == 2)
+                {
+                    mm.TIME_B = now.ToString("yyyy-MM-dd HH:mm:ss");
+                    mm.NAME_B = company[0].NAME;
+                    mm.LAT_B = lat.ToString();
+                    mm.LNG_B = lng.ToString();
+                }
+                else if (sign_status == 3)
+                {
+                    mm.TIME_C = now.ToString("yyyy-MM-dd HH:mm:ss");
+                    mm.NAME_C = company[0].NAME;
+                    mm.LAT_C = lat.ToString();
+                    mm.LNG_C = lng.ToString();
+                }
+                else if (sign_status == 4)
+                {
+                    mm.TIME_D = now.ToString("yyyy-MM-dd HH:mm:ss");
+                    mm.NAME_D = company[0].NAME;
+                    mm.LAT_D = lat.ToString();
+                    mm.LNG_D = lng.ToString();
+                }
+                else{}
+
+                if (operate_type == "INSER")
+                {
+                    mm.Insert();
+                    return 0;
+                }
+                else
+                {
+                    mm.Updata("  and id=" + l[0].ID);
+                    return 0;
+                }
+            }
+            else if (sign_status == -1)
+            {
+                return -2; //已签到
+            }
+            else
+            {
+                return -3; //打卡失败
+            }
+            
+        }
+        /// <summary>
+        /// type:1  查询所有附近的公司，并从远到近排列;
+        /// type:2  查询最近的打卡点;
+        /// 默认为1
+        /// </summary>
+        /// <param name="lng"></param>
+        /// <param name="lat"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static List<KfkfCode> NearBY(double lng, double lat,int type=1)
+        {
+            List<KfkfCode> list = new List<KfkfCode>();
+            DataTable dt = Function.NeighbourCpn(lng, lat);
+            if (dt != null & dt.Rows.Count > 0)
+            {
+                if (type == 1)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        KfkfCode k = new KfkfCode();
+                        k.NAME = row["NAME"].ToString();
+                        k.ID = Convert.ToInt16(row["ID"].ToString());
+                        list.Add(k);
+                    }
+                    return list;
+                }
+                else if (type == 2)
+                {
+                    KfkfCode k = new KfkfCode();
+                    k.NAME = dt.Rows[0]["NAME"].ToString();
+                    k.ID = Convert.ToInt16(dt.Rows[0]["ID"].ToString());
+                    list.Add(k);
+                    return list;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+}

@@ -1,0 +1,419 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using makelanlan;
+using System.Data;
+namespace WebApplication
+{
+    /// <summary>
+    /// AccountService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class AccountService : System.Web.Services.WebService
+    {
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+
+        [WebMethod(EnableSession = true)]
+        public void AccountFee(string userName, string client, string code,string eating,string other,string person,
+            string traffic,string commission,string remark,string hisname, string hisphone, string note)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            TreatFee t = new TreatFee();
+            t.BILLCODE = ScueFun.Code.BasicCode("TreatFee", "BILLCODE", "TF");
+            t.CLIENT = client;
+            t.VBCODE = code;//拜访单单号
+            t.BILLMAN = userName;
+            t.EATING = eating;
+            t.OTHER = other;
+            t.PERSON = person;
+
+            t.NAME = hisname;
+            t.PHONE = hisphone;
+            t.NOTE = note;
+
+            t.TRAFFIC = traffic;
+            t.COMMISSION = commission;//佣金申请
+            t.BLANK_STR_1 = remark;//备注，说明
+            t.CREATETIME = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+            t.STATE = 0;//已提交
+            t.Insert();
+        }
+        
+        [WebMethod(EnableSession = true)]
+        public SignBill WtSignBill(string userName,string client,string remark)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            SignBill sign = new SignBill();
+            string position = KFLocation.Get(client);
+            string lng = null,lat = null;
+            if (position == "")//该客户没有定位
+            {
+                if (MyGlobal.AERA_CHECK)  //是否范围校验
+                {
+                    sign.status = -1;
+                    return sign;
+                }
+            }
+            else if (position == "none")//不存在该用户
+            {
+                sign.status = -2;
+                return sign;
+            }
+            else { }
+            if (MyGlobal.AERA_CHECK)  //是否范围校验
+            {
+                string[] strs_kf = position.Split(',');
+                lng = strs_kf[0];
+                lat = strs_kf[1];
+            }
+            else
+            {
+                lng = "";
+                lat = "";
+            }
+            TreatFee t = new TreatFee();
+            List<TreatFee> list =  t.Select(" and VBCODE= '打卡申请'  and  left(createtime, 10) = CONVERT(varchar(10), GETDATE(), 120)   and billman='" + userName + "'  ");
+            if (list.Count > 0)
+            {
+                sign.status = -3;
+                return sign;
+            }
+
+            t.BILLCODE = ScueFun.Code.BasicCode("TreatFee", "BILLCODE", "TF");
+            t.VBCODE = "打卡申请";//拜访单单号
+            t.CLIENT = client;//客户名字
+            t.BILLMAN = userName;//申请人
+            t.BLANK_STR_1 = remark;//备注，说明
+            t.KFLNG = lng;
+            t.KFLAT = lat;
+            t.CREATETIME = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");//申请时间
+            t.STATE = 0;//已提交
+            t.Insert();
+            sign.status = 0;
+            
+            return sign;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public List<FeeBill> FeeBills(string userName)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            List<FeeBill> bills = new List<FeeBill>();
+            TreatFee t = new TreatFee();
+            List<TreatFee> list =  t.Select(" and BILLMAN='"+ userName + "' order by id desc ");
+            foreach (TreatFee tf in list)
+            {
+                FeeBill bill = new FeeBill();
+                bill.billcode = tf.BILLCODE;
+                bill.billman = tf.BILLMAN;
+                bill.createtime = tf.CREATETIME;
+                bill.state = tf.STATE;
+                if (bill.state == 0)
+                {
+                    bill.state_desc = "未审核";
+                }
+                else if (bill.state == 10)
+                {
+                    bill.state_desc = "审核通过";
+                }
+                else if (bill.state == -1)
+                {
+                    bill.state_desc = "审核失败";
+                }
+                bill.vbcode= tf.VBCODE;
+                bill.client = tf.CLIENT;
+                bill.eating = tf.EATING;
+                bill.other = tf.OTHER;
+                bill.person = tf.PERSON;
+                bill.traffic = tf.TRAFFIC;
+                bill.commission = tf.COMMISSION;
+                bill.remark = tf.BLANK_STR_1;
+                bill.opinion= tf.BLANK_STR_2;
+                bills.Add(bill);
+            }
+            return bills;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public List<FeeBill> BillsState0(string userName, int curPage, int pageSize)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            int num = curPage * pageSize;
+            string sql = "select top " + pageSize.ToString() + " o.* from (  " +
+            "select row_number() over(order by id desc) as rownumber,a.* from(" +
+            "select * from TreatFee where state = 0 ) as a ) as o where rownumber> "+ num.ToString();
+            DataTable dt = DBLL.ExecuteDataTable(MyGlobal.DataBase, sql);
+            List<FeeBill> bills = new List<FeeBill>();
+            //TreatFee t = new TreatFee();
+            //List<TreatFee> list = t.Select(" and STATE=0  order by id desc ");
+            foreach (DataRow tf in dt.Rows)
+            {
+                FeeBill bill = new FeeBill();
+                bill.billcode = tf["BILLCODE"].ToString();
+                bill.billman = tf["BILLMAN"].ToString();
+                bill.createtime = tf["CREATETIME"].ToString();
+                bill.state = Convert.ToInt16(tf["STATE"].ToString());
+                if (bill.state == 0)
+                {
+                    bill.state_desc = "未审核";
+                }
+                else if (bill.state == 10)
+                {
+                    bill.state_desc = "审核通过";
+                }
+                else if (bill.state == -1)
+                {
+                    bill.state_desc = "审核失败";
+                }
+                bill.vbcode = tf["VBCODE"].ToString();
+                bill.client = tf["CLIENT"].ToString();
+                bill.eating = tf["EATING"].ToString();
+                bill.other = tf["OTHER"].ToString();
+                bill.person = tf["PERSON"].ToString();
+                bill.traffic = tf["TRAFFIC"].ToString();
+                bill.commission = tf["COMMISSION"].ToString();
+                bill.remark = tf["BLANK_STR_1"].ToString();
+                bills.Add(bill);
+            }
+            return bills;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public bool AuditBills(string userName,string billcode,string opinion,string type)
+        {
+            bool flag = false;
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return flag;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            TreatFee t = new TreatFee();
+            if (type == "YES")
+            {
+                if (opinion.Trim() == "")
+                {
+                    t.BLANK_STR_2 = "同意！";
+                }
+                t.STATE = 10;//审核成功
+            }
+            else
+            {
+                t.STATE = -1;//审核失败
+                t.BLANK_STR_2 = opinion;//审核意见
+            }
+            t.AUDITDATE = System.DateTime.Now.ToString();//审核时间
+            t.BLANK_STR_3 = userName;//审核人名字
+            t.Updata("  and BILLCODE='" + billcode + "'  ");
+            flag = true;
+            return flag;
+        }
+
+
+        [WebMethod(EnableSession = true)]
+        public List<VisitBill> GetBills(string userName)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            List<VisitBill> result = new List<VisitBill>();
+            string date  = DateTime.Now.Date.ToString();
+            clientservice_VisitBill bills = new clientservice_VisitBill();
+            List<clientservice_VisitBill> list = bills.Select(" and billman='" + userName + "' and  BILLDATE='"+ date + "'  ", " client,billdate,notepre,code,zf3,zf4,zf5 ");//公司、拜访时间、内容、单号、名字、职位、电话
+            foreach (clientservice_VisitBill b in list)
+            {
+                VisitBill v = new VisitBill();
+                v.client = b.CLIENT;
+                v.code = b.CODE;
+                v.content = b.NOTEPRE;
+                v.date = b.BILLDATE.ToString("yyyy-MM-dd");
+                v.hisname = b.ZF3;
+                v.hisposition = b.ZF4;
+                v.hisphone = b.ZF5;
+                result.Add(v);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 分页请求
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        [WebMethod(EnableSession = true)]
+        public List<FeeBill> MyFeeBills(string userName,int curPage,int pageSize)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+
+            // P_MyBill result = new P_MyBill();
+            int num = curPage* pageSize;
+           // curPage++;
+            string sql = " select top 10 o.* from( " +
+             " select row_number() over(order by id desc) as rownumber, a.* from( " +
+             " select * from TreatFee where BILLMAN = '" + userName + "' ) as a) as o where rownumber > "+num.ToString();
+            DataTable dt = DBLL.ExecuteDataTable(MyGlobal.DataBase, sql);
+
+            List<FeeBill> bills = new List<FeeBill>(); 
+
+            foreach (DataRow row in dt.Rows)
+            {
+                FeeBill bill = new FeeBill();
+                bill.billcode = row["BILLCODE"].ToString();
+                bill.billman = row["BILLMAN"].ToString();
+                bill.createtime = row["CREATETIME"].ToString();
+                bill.state = Convert.ToInt16(row["STATE"].ToString());
+                if (bill.state == 0)
+                {
+                    bill.state_desc = "未审核";
+                }
+                else if (bill.state == 10)
+                {
+                    bill.state_desc = "审核通过";
+                }
+                else if (bill.state == -1)
+                {
+                    bill.state_desc = "审核失败";
+                }
+                bill.vbcode = row["VBCODE"].ToString();  
+                bill.client = row["CLIENT"].ToString();  
+                bill.eating = row["EATING"].ToString();  
+                bill.other = row["OTHER"].ToString();  
+                bill.person = row["PERSON"].ToString();  
+                bill.traffic = row["TRAFFIC"].ToString();  
+                bill.commission = row["COMMISSION"].ToString();  
+                bill.remark = row["BLANK_STR_1"].ToString();  
+                bill.opinion = row["BLANK_STR_2"].ToString();  
+                bills.Add(bill);
+            }
+           // result.list = bills;
+           // result.page = curPage;
+            return bills;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public int Sign (string userName,string userId, string type,double lng,double lat)
+        {
+            //string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            //string session = Session.SessionID.ToString();
+            //if (!cookies.Equals(session))
+            //{
+            //    return -10;//身份验证失败
+            //}
+            MLogin.GetExeUname();
+            if (type.ToUpper() == "SIGNIN")
+            {
+                return SignCS.SignIn(userName, userId, lng, lat);
+            }
+            else if (type.ToUpper() == "SIGNOUT")
+            {
+                return SignCS.SignOut(userName, userId, lng, lat);
+            }
+            else if (type!= "")
+            {
+                if (MyGlobal.SignType)//区分签到签退
+                {
+                    return SignCS.Sign_P(userName, userId, lng, lat, type);
+                }
+                else
+                {
+                    return SignCS.Sign_P(userName, userId, lng, lat, "");
+                }
+            }
+            else {
+                return -10;//身份验证失败
+            }
+        }
+
+        [WebMethod(EnableSession = true)]
+        public List<string> SignNote(string userId,string date)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            return SignCS.SignRemark(userId, date);
+        }
+
+        [WebMethod(EnableSession = true)]
+        public List<PU> PUKU_U(string userName)
+        {
+            //string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            //string session = Session.SessionID.ToString();
+            //if (!cookies.Equals(session))
+            //{
+            //    return null;//身份验证失败
+            //}
+            MLogin.GetExeUname();
+            return UserLocation.GetPU(" and  userpu <> 'admin' ");
+        }
+
+
+        [WebMethod(EnableSession = true)]
+        public bool GetDIS(double lng,double lat,double lng1,double lat1)
+        {
+            if (MyGlobal.AERA_CHECK)//是否检核范围
+            {
+                if (ScueFun.LngLatDis.GetDistance(lng, lat, lng1, lat1) > MyGlobal.VISITAERA)//超出范围
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else//不检核直接返回 true
+            {
+                return true;
+            }
+        }
+    }
+}

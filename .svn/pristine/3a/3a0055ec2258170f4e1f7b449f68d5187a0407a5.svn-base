@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Data;
+using System.Web;
+using makelanlan;
+namespace WebApplication
+{
+    public class Function
+    {
+        public static string CalKFcode()
+        {
+            string maxV = string.Empty;
+            string sql = "select code from ClientService_kfku where id = " +
+                " (select max(id) from ClientService_kfku where code <> '' ) ";
+            DataTable tb = DBLL.ExecuteDataTable(BLL.数据库.默认数据库, sql);
+            if (tb.Rows.Count <= 0)
+            {
+                maxV = "1";
+            }
+            else
+            {
+                maxV = (Convert.ToInt32(tb.Rows[0]["code"].ToString()) + 1).ToString();
+            }
+            return maxV;
+        }
+    }
+}

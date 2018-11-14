@@ -1,0 +1,119 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using makelanlan;
+using ScueFun;
+using System.Data;
+namespace WebApplication
+{
+    /// <summary>
+    /// AuditService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class AuditService : System.Web.Services.WebService
+    {
+
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+
+        [WebMethod(EnableSession = true)]
+        public List<PushPoi> AuditPoi(string userName, int curPage, int pageSize)
+        {
+            //获得bill
+            //string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            //string session = Session.SessionID.ToString();
+            //if (!cookies.Equals(session))
+            //{
+            //    return;//身份验证失败
+            //}
+            MLogin.GetExeUname();
+            int num = curPage * pageSize;
+            string where = "";
+            string sql = "";
+            if (userName == "郑昌仁")
+            {
+                where = " and zf1='总经办' ";
+            }
+            else if (userName == "王娅丽")
+            {
+                where = " and  zf1='销售内勤' ";
+            }
+            else if (userName == "邵凯丽")
+            {
+            }
+            else
+            {
+                return null;
+            }
+            sql = "select top " + pageSize.ToString() + " o.* from (  " +
+                  "  select row_number() over(order by id desc) as rownumber,a.* from(  " +
+                  "  select * from L_PushPoi where 1=1 and  OPERATE_TYPE='已提交' " + where + ") as a ) as o where rownumber> " + num.ToString();
+
+            DataTable dt = DBLL.ExecuteDataTable(MyGlobal.DataBase, sql);
+            List<PushPoi> result = new List<PushPoi>();
+            foreach (DataRow row in dt.Rows)
+            {
+                PushPoi p = new PushPoi();
+                p.ID= row["ID"].ToString();
+                p.BILLMAN = row["BILLMAN"].ToString();
+                p.OPERATE_TIME = row["OPERATE_TIME"].ToString();
+                p.OPERATE_TYPE = row["OPERATE_TYPE"].ToString();
+                p.CLIENT = row["CLIENT"].ToString();
+                p.BEFORE_LNG = row["BEFORE_LNG"].ToString();//原始定位
+                p.BEFORE_LAT = row["BEFORE_LAT"].ToString();
+                p.AFTER_LNG = row["AFTER_LNG"].ToString();//经度//现在请求定位
+                p.AFTER_LAT = row["AFTER_LAT"].ToString();//纬度
+                double dis =  ScueFun.LngLatDis.GetDistance(Convert.ToDouble(row["BEFORE_LNG"].ToString()),
+                    Convert.ToDouble(row["BEFORE_LAT"].ToString()),
+                    Convert.ToDouble(row["AFTER_LNG"].ToString()),
+                    Convert.ToDouble(row["AFTER_LAT"].ToString()));
+                p.DISTANCE = Math.Round(dis / 1000, 2).ToString()+"km";
+                result.Add(p);
+            }
+            return result;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public int PoiBillAudit(string userName, string type, string id)
+        {
+            //审核bill
+            //string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            //string session = Session.SessionID.ToString();
+            //if (!cookies.Equals(session))
+            //{
+            //    return;//身份验证失败
+            //}
+            MLogin.GetExeUname();
+            L_PushPoi n = new L_PushPoi();
+            List<L_PushPoi>  list = n.Select(" and id =" + id);
+            if (list.Count <= 0)
+            {
+                return -1;
+            }
+            else
+            {
+                n.ZF2 = userName;//审核人
+                n.ZF3 = SysTime.GetTime.ToString();//审核时间
+                if (type.ToUpper() == "YES")
+                {
+                    n.OPERATE_TYPE = "同意";
+                    KFLocation.Set(list[0].BILLMAN, list[0].CLIENT, list[0].AFTER_LNG + "," + list[0].AFTER_LAT);
+                }
+                else
+                {
+                    n.OPERATE_TYPE = "否决";
+                }
+                return n.Updata(" and id=" + id);
+            }
+        }
+    }
+}

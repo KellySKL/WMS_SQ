@@ -1,0 +1,229 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using makelanlan;
+namespace WebApplication
+{
+    /// <summary>
+    /// WeixiuService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class WeixiuService : System.Web.Services.WebService
+    {
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+        [WebMethod(EnableSession = true)]
+        public int WxReport(string userName, double lng1, double lat1,string userId,string client,string billcode,int id,string note)
+        {
+            int flag = 0;
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return -10;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            string position = KFLocation.Get(client);
+            double lng, lat;
+            if (position == "")//该客户没有定位，将现在这个位置赋值给当前客户
+            {
+                flag = -2;
+                return flag;
+            }
+            else if (position == "none")//不存在该用户
+            {
+                flag = -3;
+                return flag;
+            }
+            else { }
+            string[] strs= position.Split(',');
+            lng = Convert.ToDouble(strs[0]);
+            lat = Convert.ToDouble(strs[1]);
+            if (ScueFun.LngLatDis.GetDistance(lng, lat, lng1, lat1) > MyGlobal.VISITAERA)
+            {
+                flag = 5;
+                return flag;//超出范围不能提交
+            }
+
+            string[] strs_kf = position.Split(',');
+            lng = Convert.ToDouble(strs_kf[0]);
+            lat = Convert.ToDouble(strs_kf[1]);
+
+            //事务处理开始,劫持链接通道的sql语句
+            TransactionSql.Start(BLL.数据库.默认数据库);  //===>开始
+
+            clientservice_AfterServiceBill C = new clientservice_AfterServiceBill();
+            C.ZF5 = note;
+            C.Updata(" AND ID=" + id);
+            L_AfterRepair repair = new L_AfterRepair();
+            repair.BILLMAN = userName;
+            repair.OPERATE_TIME = SysTime.GetTime.ToString();
+            repair.REFERCODE = billcode;//关联维修单号
+            repair.OPERATE_TYPE = "完结";
+            repair.ZF1 = id.ToString();//关联维修单号的id
+            repair.Insert();
+
+            //更新关联单据号，最新的，可作为最后打卡的目标公司,名称、地址  20180904 skl
+            puku_user u = new puku_user();
+            u.REFERCODE = billcode;
+            u.ZF1 = client;
+            u.ZF2 = lng.ToString();
+            u.ZF3 = lat.ToString();
+            u.ZF4 = System.DateTime.Now.ToString("yyyyMMdd");
+            u.Updata(" and  USERPU='" + userId + "'   ");
+
+            //提交事务到sql服务器处理//===>结束
+            if (!TransactionSql.EndSql())//判断是否成功
+            {
+                flag = -1;
+            }
+            return flag;
+        }
+
+        /// <summary>
+        /// 售后维修
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        [WebMethod(EnableSession = true)]
+        public List<WXOBJ1> AfterSRepair(string userName,int type)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            string where = " and  BILLMAN='" + userName + "'  and  zf3 <> ''  ";
+            string by = " top 20 * ";
+            if (type == 0)
+            {
+                where += " and  zf2=''  and  sz10=0  ";//未接收
+            }
+            else if (type == 1)
+            {
+                where += " and  zf2='" + userName + "'   and   id  in( select zf1 from L_AfterRepair a where not exists(select 1 from L_AfterRepair b where b.refercode = a.refercode and b.id > a.id)  and OPERATE_TYPE = '接受' and BILLMAN ='"+userName+ "' ) ";//处理中
+            }
+            else if (type == 2)
+            {
+                where += " and  zf2='" + userName + "'   and   id  in( select zf1 from L_AfterRepair a where not exists(select 1 from L_AfterRepair b where b.refercode = a.refercode and b.id > a.id)  and OPERATE_TYPE = '完结' and BILLMAN ='" + userName + "' )  order by id desc";//维修完成
+            }
+            else { }
+            List<WXOBJ1> ms = new List<WXOBJ1>();
+            clientservice_AfterServiceBill bill = new clientservice_AfterServiceBill();
+            List <clientservice_AfterServiceBill> list = bill.Select(where, by);
+            foreach (clientservice_AfterServiceBill c in list)
+            {
+                WXOBJ1 o = new WXOBJ1();
+                o.ID = c.ID;
+                o.CODE = c.CODE;//维修单号
+                o.BILLMAN = c.BILLMAN;
+                o.CLIENT = c.CLIENT;
+                o.BILLTYPE = c.BILLTYPE;
+                o.ZF1 = c.ZF1;//机床编号
+                o.NOTEPRE = c.NOTEPRE;//内容描述（电话回访）
+                o.ZF3 = c.ZF3;//分析描述 初判断
+                o.CONTACT = c.ZF27;
+                o.PHONE = c.ZF28;
+                o.ZF5 = c.ZF5;
+                ms.Add(o);
+            }
+            return ms;
+        }
+
+        /// <summary>
+        /// 售后维修 处理 拒绝/接收
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        [WebMethod(EnableSession = true)]
+        public int RepairDeal(string userName, string type, int id, string refercode)
+        {
+            int flag = 0;
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return -10;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            //事务处理开始,劫持链接通道的sql语句
+            TransactionSql.Start(BLL.数据库.默认数据库);  //===>开始
+           
+            L_AfterRepair repair = new L_AfterRepair();
+            repair.BILLMAN = userName;
+            repair.OPERATE_TIME = SysTime.GetTime.ToString();
+            repair.REFERCODE = refercode;//关联维修单号
+            repair.OPERATE_TYPE = type;
+            repair.ZF1 = id.ToString();//关联维修单号的id
+            repair.Insert();
+            if (type == "接受")
+            {
+                BLL.SetToSql(BLL.数据库.默认数据库, " update clientservice_AfterServiceBill set zf2 = '" + userName + "' where id = " + id);
+            }
+            else if (type == "拒绝")
+            {
+                BLL.SetToSql(BLL.数据库.默认数据库, " update clientservice_AfterServiceBill set BillMan = '', auditing = '' where id = " + id);
+            }
+            else { }
+
+            //提交事务到sql服务器处理
+            if (!TransactionSql.EndSql())                     //===>结束
+            {
+                flag = -1;
+            }
+            return flag;
+        }
+
+
+        /// <summary>
+        /// 内部维修
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        [WebMethod(EnableSession = true)]
+        public List<WXOBJ1> NeibuWx(string userName)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            MLogin.GetExeUname();
+            List<WXOBJ1> ms = new List<WXOBJ1>();
+            BILLnouse2 JC = new BILLnouse2();
+            string where = "and  BILLTYPE ='售后返厂维修' and (isnull(Paytype,'')<>'')and left(code,1)<>'*' and  (freenum5 is null or freenum5 < 1)";
+            List<BILLnouse2> bs = JC.Select(where, " PAYTYPE ");
+            string str = string.Empty;
+            foreach (BILLnouse2 h in bs)
+            {
+                str += "'" + h.PAYTYPE + "',";
+            }
+            str = str.Substring(0, str.Length - 1);
+            clientservice_AfterServiceBill bill = new clientservice_AfterServiceBill();
+            List<clientservice_AfterServiceBill> list = bill.Select(" and  BILLMAN='" + userName + "'   and code in (" + str + ")");
+            foreach (clientservice_AfterServiceBill c in list)
+            {
+                WXOBJ1 o = new WXOBJ1();
+                o.BILLMAN = c.BILLMAN;
+                o.CLIENT = c.CLIENT;
+                o.BILLTYPE = c.BILLTYPE;
+                o.ZF1 = c.ZF1;
+                ms.Add(o);
+            }
+            return ms;
+        }
+       
+    }
+}

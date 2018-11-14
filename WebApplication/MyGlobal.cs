@@ -2,13 +2,61 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Net;
+using makelanlan;
 
 namespace WebApplication
 {
-    public class MyGlobal
+    public static class MyGlobal
     {
-        public static double VisitAera = 2000;//拜访距离2公里内
-        public static List<string> UserLogin=new List<string>();//拜访距离2公里内
-        public static string Name;
+        public static MySoapHeader myHeader = new MySoapHeader();////定义用户身份验证类变量header
+        public static CookieContainer COOKIE = new CookieContainer();//设置为全局，这样可以方便每个函数直接调用
+        public static BLL.数据库 DataBase = BLL.数据库.默认数据库;
+       // public static BLL.数据库 DataBase = BLL.数据库.正式数据;
+
+        /// <summary>
+        /// //拜访距离(单位米)
+        /// </summary>
+        public static double VISITAERA = 2000;
+        /// <summary>
+        /// 是否距离校验
+        /// </summary>
+        public static bool AERA_CHECK = true;
+        /// <summary>
+        /// 是否区分签到签退
+        /// </summary>
+        public static bool SignType = false;
+        /// <summary>
+        /// 多长时间内不能重复签到 min
+        /// </summary>
+        public static double SignMin = 30;
+        /// <summary>
+        /// 
+        /// </summary>
+        public static List<string> USERSESSIONID=new List<string>();
+
+        /// <summary>
+        /// 计算在客户停留时间-范围-单位：米
+        /// </summary>
+        public static double STAY_AREA = 200;
+
+        /// <summary>
+        /// //距离 ，单位：千米， “附近”
+        /// </summary>
+        public static double DIS = 5;
+        /// <summary>
+        /// //半径，单位：千米， 用于 判断最近的客户|
+        /// </summary>
+        public static double RADIUS = 0.5;
+        /// <summary>
+        /// //半径，单位：千米， 用于 判断最近的打卡点
+        /// </summary>
+        public static double AREA_COMPANY = 0.1;
+        /// <summary>
+        /// "附近" 显示多少个客户
+        /// </summary>
+        public static string TOPCOUNT="5";
+
+        public static string NAME;
     }
 }

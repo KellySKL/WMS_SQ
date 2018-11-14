@@ -1,0 +1,259 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+
+namespace WebApplication
+{
+    /// <summary>
+    /// BLLService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class BLLService : System.Web.Services.WebService
+    {
+
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+    }
+    public class VisitBill
+    {
+        private string _code;
+        public string code { get { return _code; } set { _code = value; } }
+        private string _client;
+        public string client { get { return _client; } set { _client = value; } }
+
+        private string _date;
+        public string date { get { return _date; } set { _date = value; } }
+
+        private string _content;
+        public string content { get { return _content; } set { _content = value; } }
+
+        private string _hisname;
+        public string hisname { get { return _hisname; } set { _hisname = value; } }
+
+        private string _hisposition;
+        public string hisposition { get { return _hisposition; } set { _hisposition = value; } }
+
+        private string _hisphone;
+        public string hisphone { get { return _hisphone; } set { _hisphone = value; } }
+
+        //private int _status;
+        //public int status { get { return _status; } set { _status = value; } }
+
+        //private string _authorised;
+        //public string authorised { get { return _authorised; } set { _authorised = value; } }
+
+    }
+
+    //---------------------------------------------
+    public class Person
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public int age { get; set; }
+    }
+
+    public class Kfkf
+    {
+
+        private string _name;//
+        /// <summary>
+        /// 公司名称
+        /// </summary>
+        public string name { get { return _name; } set { _name = value; } }
+
+        private string _contactor;//
+        /// <summary>
+        /// 联系人
+        /// </summary>
+        public string contactor { get { return _contactor; } set { _contactor = value; } }
+
+        private string _phone;//
+        /// <summary>
+        /// 联系电话
+        /// </summary>
+        public string phone { get { return _phone; } set { _phone = value; } }
+
+        private string _type;//
+                             /// <summary>
+                             /// 客户类型
+                             /// </summary>
+        public string type { get { return _type; } set { _type = value; } }
+
+        private string _lastVisit;
+        /// <summary>
+        /// 上一次回访时间
+        /// </summary>
+        public string lastVisit { get { return _lastVisit; } set { _lastVisit = value; } }
+
+        private string _lastRepair;
+        /// <summary>
+        /// 上一次维修时间
+        /// </summary>
+        public string lastRepair { get { return _lastRepair; } set { _lastRepair = value; } }
+
+        private double _lng;
+        /// <summary>
+        /// 经度
+        /// </summary>
+        public double lng { get { return _lng; } set { _lng = value; } }
+
+        private double _lat;
+        /// <summary>
+        /// 纬度
+        /// </summary>
+        public double lat { get { return _lat; } set { _lat = value; } }
+        private string _billman;
+        /// <summary>
+        /// 上次责任者
+        /// </summary>
+        public string billman { get { return _billman; } set { _billman = value; } }
+
+        private string _remark;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public string remark { get { return _remark; } set { _remark = value; } }
+
+    }
+
+    public class KfkfCode
+    {
+        private int _ID;
+        public int ID { get { return _ID; } set { _ID = value; } }
+
+        private string _NAME;
+        public string NAME { get { return _NAME; } set { _NAME = value; } }
+
+    }
+
+    public class User
+    {
+        private string _userId;
+        public string userId { get { return _userId; } set { _userId = value; } }
+
+        private string _name;
+        public string name { get { return _name; } set { _name = value; } }
+
+        private string _password;
+        public string password { get { return _password; } set { _password = value; } }
+
+        private int _status;
+        public int status { get { return _status; } set { _status = value; } }
+
+        private string _authorised;
+        public string authorised { get { return _authorised; } set { _authorised = value; } }
+
+        private string _session;
+        public string session { get { return _session; } set { _session = value; } }
+
+        private string _cookies;
+        public string cookies { get { return _cookies; } set { _cookies = value; } }
+
+    }
+    /// <summary>
+    /// 拜访派单实体,state=0(派单),state=7(接收)，state=10(完结)
+    /// </summary>
+    public class VSBill
+    {
+        private Int32 _id;
+        public Int32 id { get { return _id; } set { _id = value; } }
+
+        private string _code;
+        public string code { get { return _code; } set { _code = value; } }
+        private string _client;
+        public string client { get { return _client; } set { _client = value; } }
+
+        private string _date;
+        public string date { get { return _date; } set { _date = value; } }
+
+        private string _content;
+        public string content { get { return _content; } set { _content = value; } }
+
+        private string _hisname;
+        public string hisname { get { return _hisname; } set { _hisname = value; } }
+
+        private string _hisposition;
+        public string hisposition { get { return _hisposition; } set { _hisposition = value; } }
+
+        private string _hisphone;
+        public string hisphone { get { return _hisphone; } set { _hisphone = value; } }
+
+        private string _visittype;
+        public string visittype { get { return _visittype; } set { _visittype = value; } }
+
+        private string _notice;
+        public string notice { get { return _notice; } set { _notice = value; } }
+        /// <summary>
+        /// 接收时间
+        /// </summary>
+        private string _rq1;
+        public string rq1 { get { return _rq1; } set { _rq1 = value; } }
+        /// <summary>
+        /// 完成时间
+        /// </summary>
+        private string _rq2;
+        public string rq2 { get { return _rq2; } set { _rq2 = value; } }
+
+        private int _state;
+        public int state { get { return _state; } set { _state = value; } }
+        //private string _authorised;
+        //public string authorised { get { return _authorised; } set { _authorised = value; } }
+
+    }
+
+
+    public class FeeBill
+    {
+        private string CLIENT;
+        public string client { get { return CLIENT; } set { CLIENT = value; } }
+        private string BILLCODE;
+        public string billcode { get { return BILLCODE; } set { BILLCODE = value; } }
+
+        private string VBCODE;
+        public string vbcode { get { return VBCODE; } set { VBCODE = value; } }
+
+        private string CREATETIME;
+        public string createtime { get { return CREATETIME; } set { CREATETIME = value; } }
+
+        private string BILLMAN;
+        public string billman { get { return BILLMAN; } set { BILLMAN = value; } }
+
+        private int STATE;
+        public int state { get { return STATE; } set { STATE = value; } }
+
+        private string STATE_DESC;
+        public string state_desc { get { return STATE_DESC; } set { STATE_DESC = value; } }
+
+        private string EATING;
+        public string eating { get { return EATING; } set { EATING = value; } }
+
+        private string OTHER;
+        public string other { get { return OTHER; } set { OTHER = value; } }
+
+        private string PERSON;
+        public string person { get { return PERSON; } set { PERSON = value; } }
+
+        private string TRAFFIC;
+        public string traffic { get { return TRAFFIC; } set { TRAFFIC = value; } }
+
+        private string COMMISSION;
+        public string commission { get { return COMMISSION; } set { COMMISSION = value; } }
+
+        private string REMARK;
+        public string remark { get { return REMARK; } set { REMARK = value; } }
+
+        private string OPINION;
+        public string opinion { get { return OPINION; } set { OPINION = value; } }
+
+    }
+
+}

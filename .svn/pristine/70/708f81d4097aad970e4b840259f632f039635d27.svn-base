@@ -1,0 +1,64 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using makelanlan;
+
+namespace WebApplication
+{
+    public class KFLocation
+    {
+        /// <summary>
+        /// 获取客户定位
+        /// </summary>
+        /// <param name="name"> 客户名称</param>
+        /// <returns>  返回 ""  说明未标记，返回"none" 说明无客户需新建</returns>
+        public static string Get(string name)
+        {
+            string position = "";
+            ClientService_kfku k = new ClientService_kfku();
+            List<ClientService_kfku> ts = k.Select(" and name='" + name.Trim() + "' ");
+         //   kfku m = new kfku();
+           // List<kfku> ms = m.Select(" and name='" + name.Trim() + "' ");
+            if (ts.Count > 0)
+            {
+                if (ts[0].ZF29 != null && ts[0].ZF29.Trim() != "")
+                {
+                    position = ts[0].ZF29+','+ ts[0].ZF30;
+                }
+            }
+            else
+            {
+                position = "none";//返回没有该客户
+            }
+            //else
+            //{
+            //    if (ms.Count > 0)
+            //    {
+            //        if (ms[0].ZF29 != null && ms[0].ZF29.Trim() != "")
+            //        {
+            //            position = ms[0].ZF29 + ',' + ms[0].ZF30;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        position = "none";//返回没有该客户
+            //    }
+
+            //}
+            return position;
+        }
+        public static void Set(string name, string position)
+        {
+            ClientService_kfku k = new ClientService_kfku();
+            string[] po = position.Split(',');
+            k.ZF29 = po[0];//经度
+            k.ZF30 = po[1];//纬度
+            k.Updata(" and name='" + name + "' ");
+            //kfku p = new kfku();
+            //p.ZF29 = po[0];
+            //p.ZF30 = po[1];
+            //p.Updata(" and name='" + name + "' ");
+        }
+    }
+}

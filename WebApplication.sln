@@ -5,6 +5,16 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication", "WebApplication\WebApplication.csproj", "{C0947F03-507D-4923-9B52-43739A393B93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScueFun", "..\sqErp\ScueFun\ScueFun.csproj", "{2B1E076F-480E-4B69-A3F5-FC6433D81845}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sqErp", "..\sqErp\sqErp\sqErp.csproj", "{CFD88D69-1C75-4627-91ED-42EC5FA431DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "维修单同步", "维修单同步\维修单同步.csproj", "{CE61291C-3FD2-4AE3-97E3-E6B2E14BD555}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "App测试库", "C:\Users\WG002\Desktop\makelanlan.appconfig\AppConfigMakelanlan\App测试库.vbproj", "{59F5FF06-496F-40DC-A3E5-B34BEFD1B656}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "App正式库", "C:\Users\WG002\Desktop\makelanlan.appconfig\AppConfigSANQI\App正式库.vbproj", "{5EA714A2-4C96-4415-AF85-94EEEB888FB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,11 +25,32 @@ Global
 		{C0947F03-507D-4923-9B52-43739A393B93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0947F03-507D-4923-9B52-43739A393B93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0947F03-507D-4923-9B52-43739A393B93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B1E076F-480E-4B69-A3F5-FC6433D81845}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B1E076F-480E-4B69-A3F5-FC6433D81845}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B1E076F-480E-4B69-A3F5-FC6433D81845}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B1E076F-480E-4B69-A3F5-FC6433D81845}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFD88D69-1C75-4627-91ED-42EC5FA431DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFD88D69-1C75-4627-91ED-42EC5FA431DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFD88D69-1C75-4627-91ED-42EC5FA431DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFD88D69-1C75-4627-91ED-42EC5FA431DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE61291C-3FD2-4AE3-97E3-E6B2E14BD555}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE61291C-3FD2-4AE3-97E3-E6B2E14BD555}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE61291C-3FD2-4AE3-97E3-E6B2E14BD555}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE61291C-3FD2-4AE3-97E3-E6B2E14BD555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59F5FF06-496F-40DC-A3E5-B34BEFD1B656}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59F5FF06-496F-40DC-A3E5-B34BEFD1B656}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59F5FF06-496F-40DC-A3E5-B34BEFD1B656}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59F5FF06-496F-40DC-A3E5-B34BEFD1B656}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EA714A2-4C96-4415-AF85-94EEEB888FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EA714A2-4C96-4415-AF85-94EEEB888FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EA714A2-4C96-4415-AF85-94EEEB888FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EA714A2-4C96-4415-AF85-94EEEB888FB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {86FB2D96-6D75-4719-91D8-7BF9C2905C6E}
+		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal

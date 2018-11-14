@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using makelanlan;
+namespace WebApplication
+{
+    /// <summary>
+    /// AccountService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class AccountService : System.Web.Services.WebService
+    {
+
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+
+        [WebMethod(EnableSession = true)]
+        public void AccountFee(string userName,string code,string eating,string other,string person,
+            string traffic,string commission,string remark)
+        {
+            TreatFee t = new TreatFee();
+            t.BILLCODE = ScueFun.Code.BasicCode("TreatFee", "BILLCODE", "TF");
+            t.VBCODE = code;//拜访单单号
+            t.BILLMAN = userName;
+            t.EATING = eating;
+            t.OTHER = other;
+            t.PERSON = person;
+            t.TRAFFIC = traffic;
+            t.COMMISSION = commission;//佣金申请
+            t.BLANK_STR_1 = remark;//备注，说明
+            t.CREATETIME = SysTime.GetTime.ToString("yyyy-MM-dd HH:mm:ss");
+            t.STATE = 0;//已提交
+            t.Insert();
+        }
+
+
+        [WebMethod(EnableSession = true)]
+        public List<VisitBill> GetBills(string userName)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            List<VisitBill> result = new List<VisitBill>();
+            string date  = DateTime.Now.Date.ToString();
+            clientservice_VisitBill bills = new clientservice_VisitBill();
+            List<clientservice_VisitBill> list = bills.Select(" and billman='" + userName + "' and  BILLDATE='"+ date + "'  ", " client,billdate,notepre,code,zf3,zf4,zf5 ");//公司、拜访时间、内容、单号、名字、职位、电话
+            foreach (clientservice_VisitBill b in list)
+            {
+                VisitBill v = new VisitBill();
+                v.client = b.CLIENT;
+                v.code = b.CODE;
+                v.content = b.NOTEPRE;
+                v.date = b.BILLDATE.ToString("yyyy-MM-dd");
+                v.hisname = b.ZF3;
+                v.hisposition = b.ZF4;
+                v.hisphone = b.ZF5;
+                result.Add(v);
+            }
+            return result;
+        }
+    }
+}

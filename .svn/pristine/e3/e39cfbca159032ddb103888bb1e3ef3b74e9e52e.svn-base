@@ -1,0 +1,63 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Data;
+using System.Web;
+using makelanlan;
+namespace WebApplication
+{
+    public class Function
+    {
+        /// <summary>
+        /// 获取客户code，Code= CalKFcode()
+        /// </summary>
+        /// <returns></returns>
+        public static string CalKFcode()
+        {
+            string maxV = string.Empty;
+            string sql = "select code from ClientService_kfku where id = " +
+                " (select max(id) from ClientService_kfku where code <> '' ) ";
+            DataTable tb = DBLL.ExecuteDataTable(BLL.数据库.默认数据库, sql);
+            if (tb.Rows.Count <= 0)
+            {
+                maxV = "1";
+            }
+            else
+            {
+                maxV = (Convert.ToInt32(tb.Rows[0]["code"].ToString()) + 1).ToString();
+            }
+            return maxV;
+        }
+        public static DataTable NeighbourPosition(double longitude, double latitude)
+        {
+            //先计算查询点的经纬度范围
+            double r = 6371;//地球半径千米
+            double dis = MyGlobal.DIS;
+            double dlng = 2 * Math.Asin(Math.Sin(dis / (2 * r)) / Math.Cos(latitude * Math.PI / 180));
+            dlng = dlng * 180 / Math.PI;//角度转为弧度
+            double dlat = dis / r;
+            dlat = dlat * 180 / Math.PI;
+            double minlat = latitude - dlat;
+            double maxlat = latitude + dlat;
+            double minlng = longitude - dlng;
+            double maxlng = longitude + dlng;
+            String sql = " select top "+ MyGlobal.TOPCOUNT + " cc.*,dd.introducerDate,dd.BillMan,dd.NotePre from( " +
+                " select name,contactor,phone,zf29,zf30 from  ClientService_kfku where zf29 between '" + minlng.ToString() + "'  and '" + maxlng.ToString() + "'  " +
+                "  and  zf30 between '" + minlat.ToString() + "'  and '" + maxlat.ToString() + "' " +
+                "  group by  name,contactor,phone,zf29,zf30  " +
+                " union all"+
+                " select name,contactor,phone,zf29,zf30 from kfku where zf29 between '" + minlng.ToString() + "'  and '" + maxlng.ToString() + "'  " +
+                "  and  zf30 between '" + minlat.ToString() + "'  and '" + maxlat.ToString() + "' " +
+                "  and name not in (select name from ClientService_kfku)" +
+                "  group by  name,contactor,phone,zf29,zf30 " +
+                " ) as cc "+
+                " left join"+
+                " (select * from clientservice_VisitBill a where not exists(select 1 from clientservice_VisitBill b where b.Client = a.Client and b.id > a.id) )"+
+                " as dd"+
+                " on dd.Client = cc.NAME " +
+                " order by introducerDate ";//相隔时间久的排名靠前
+            DataTable tb = DBLL.ExecuteDataTable(BLL.数据库.默认数据库, sql);
+            return tb;
+        }
+    }
+}

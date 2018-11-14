@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Net;
+
+namespace WebApplication
+{
+    public static class MyGlobal
+    {
+        public static double VISITAERA = 2000;//拜访距离2公里内
+        public static List<string> USERSESSIONID=new List<string>();//拜访距离2公里内
+        public static string NAME;
+        public static int TOPCOUNT;//显示多少个客户
+        public static MySoapHeader myHeader =new MySoapHeader();////定义用户身份验证类变量header
+        public static CookieContainer COOKIE = new CookieContainer();//设置为全局，这样可以方便每个函数直接调用
+    }
+}

@@ -1,0 +1,142 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using makelanlan;
+using ScueFun;
+namespace WebApplication
+{
+    /// <summary>
+    /// MessageService 的摘要说明
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // 若要允许使用 ASP.NET AJAX 从脚本中调用此 Web 服务，请取消注释以下行。 
+    [System.Web.Script.Services.ScriptService]
+    public class MessageService : System.Web.Services.WebService
+    {
+
+        [WebMethod]
+        public string HelloWorld()
+        {
+            return "Hello World";
+        }
+
+        [WebMethod(EnableSession = true)]
+        public string  MsgGet(string userName)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            L_VisitSend s = new L_VisitSend();
+            string today_1 = System.DateTime.Now.ToString("yyyy-MM-dd 00:00:00");
+            string today = System.DateTime.Now.ToString("yyyy-MM-dd 23:59:59");
+            //未接收消息
+            List<L_VisitSend> list = s.Select(" and SENDUSER='" + userName + "'  and  LEFT(CODE,1)<>'*'   and  VISITDATE < '" + today + "'  and state=0 ");
+            if (list.Count <= 0)
+            {
+                return null;//没有未接收消息
+            }
+            string msg = "您有" + list.Count.ToString()+ "条任务单未接收，请尽快处理！";
+            return msg;
+        }
+        [WebMethod(EnableSession = true)]
+        public List<VSBill> YWBillGet(string userName,string where)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            L_VisitSend s = new L_VisitSend();
+            List<VSBill> returnlist = new List<VSBill>();
+            string today_1 = System.DateTime.Now.ToString("yyyy-MM-dd 00:00:00");
+            string today = System.DateTime.Now.ToString("yyyy-MM-dd 23:59:59");
+            //未接收消息
+            List<L_VisitSend> list = s.Select(" and SENDUSER='" + userName + "'  and  LEFT(CODE,1)<>'*'   and  VISITDATE < '" + today + "'  "+ where ," top 20 * ");
+            if (list.Count <= 0)
+            {
+                return null;//没有未接收消息
+            }
+            else
+            {
+                foreach (L_VisitSend l in list)
+                {
+                    VSBill vs = new VSBill();
+                    vs.id = l.ID;
+                    vs.client = l.VISITCLIENT;
+                    vs.hisname = l.VISITNAME;
+                    vs.hisphone = l.VISITTEL;
+                    vs.content = l.VISITCONTENT;
+                    vs.notice = l.DOTHING;
+                    vs.visittype = l.VISITTYPE;
+                    vs.date = l.VISITDATE.ToShortDateString();
+                    vs.code = l.CODE;
+                    vs.state = l.STATE;
+                    vs.rq1 = l.RQ1.ToString();
+                    vs.rq2 = l.RQ2.ToString();
+                    returnlist.Add(vs);
+                }
+            }
+            return returnlist;
+        }
+
+        [WebMethod(EnableSession = true)]
+        public VSBill YW_Detail_Bill(string code)
+        {
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return null;//身份验证失败
+            }
+            L_VisitSend s = new L_VisitSend();
+            VSBill vs = new VSBill();
+            //未接收消息
+            List<L_VisitSend> list = s.Select(" and CODE='" + code + "' ");
+            if (list.Count <= 0)
+            {
+                return null;//没有未接收消息
+            }
+            else
+            {
+                L_VisitSend l = list[0];
+                    vs.id = l.ID;
+                    vs.client = l.VISITCLIENT;
+                    vs.hisname = l.VISITNAME;
+                    vs.hisphone = l.VISITTEL;
+                    vs.content = l.VISITCONTENT;
+                    vs.notice = l.DOTHING;
+                    vs.visittype = l.VISITTYPE;
+                    vs.date = l.VISITDATE.ToShortDateString();
+                    vs.state = l.STATE;
+                    vs.code = l.CODE;
+            }
+            return vs;
+        }
+        [WebMethod(EnableSession = true)]
+        public bool Accept_YWBill(string id,string userName)
+        {
+            bool flag = false;
+            string cookies = HttpContext.Current.Request.Cookies["guid"] == null ? "" : HttpContext.Current.Request.Cookies["guid"].Value as string;
+            string session = Session.SessionID.ToString();
+            if (!cookies.Equals(session))
+            {
+                return false;//身份验证失败
+            }
+            L_VisitSend s = new L_VisitSend();
+            s.GETUSER = userName;
+            s.RQ1 = System.DateTime.Now;//接收时间
+            s.STATE = 7;//接受派单
+            s.Updata(" and id=" + id);
+            flag = true;
+            return flag;
+        }
+    }
+}
