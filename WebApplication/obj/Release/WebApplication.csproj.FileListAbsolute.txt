@@ -1,0 +1,16 @@
+E:\WMS\webApp\WebApplication\bin\WebApplication.dll.config
+E:\WMS\webApp\WebApplication\bin\WebApplication.dll
+E:\WMS\webApp\WebApplication\bin\WebApplication.pdb
+E:\WMS\webApp\WebApplication\bin\makelanlanBLL.dll
+E:\WMS\webApp\WebApplication\bin\MakelanlanFun.dll
+E:\WMS\webApp\WebApplication\bin\makelanlanSKin.dll
+E:\WMS\webApp\WebApplication\bin\Newtonsoft.Json.dll
+E:\WMS\webApp\WebApplication\bin\ScueFun.dll
+E:\WMS\webApp\WebApplication\bin\AppConfig.dll
+E:\WMS\webApp\WebApplication\bin\ScueFun.pdb
+E:\WMS\webApp\WebApplication\bin\AppConfig.pdb
+E:\WMS\webApp\WebApplication\bin\AppConfig.xml
+E:\WMS\webApp\WebApplication\obj\Release\WebApplication.csproj.CoreCompileInputs.cache
+E:\WMS\webApp\WebApplication\obj\Release\WebApplication.csproj.CopyComplete
+E:\WMS\webApp\WebApplication\obj\Release\WebApplication.dll
+E:\WMS\webApp\WebApplication\obj\Release\WebApplication.pdb
